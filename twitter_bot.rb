@@ -20,7 +20,7 @@ require 'htmlentities'
 ### ・TwitterBaseクラスを外に出す
 
 # Usage:
-# ruby twitter.rb /path/to/sercret_keys.yml /path/to/htmlentities-4.2.0/lib /path/to/tweet_history
+# ruby /path/to/twitter_bot.rb /path/to/sercret_keys.yml /path/to/htmlentities-4.2.0/lib /path/to/tweet_history
 
 # TwitterのAPIとのやりとりを行うクラス
 class TwitterBase

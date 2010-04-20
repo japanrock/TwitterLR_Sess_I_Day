@@ -20,7 +20,7 @@ require 'htmlentities'
 ### ・TwitterBaseクラスを外に出す
 
 # Usage:
-# ruby twitter.rb /path/to/sercret_keys.yml /path/to/htmlentities-4.2.0/lib
+# ruby twitter.rb /path/to/sercret_keys.yml /path/to/htmlentities-4.2.0/lib /path/to/tweet_history
 
 # TwitterのAPIとのやりとりを行うクラス
 class TwitterBase
@@ -63,10 +63,16 @@ class TwitterBase
   end
 
   def post(tweet=nil)
-    response = access_token.post(
+    @response = access_token.post(
       'http://twitter.com/statuses/update.json',
       'status'=> tweet
     )
+  end
+
+  def response_success?
+    return true if @response.class == Net::HTTPOK
+
+    false
   end
 end
 
@@ -77,29 +83,9 @@ class Feed
   attr_reader :links
   
   def initialize
-    @all_publisheds = []
-    @all_titles     = []
-    @all_links      = []
-    @all_descriptions = []
     @publisheds = []
     @titles     = []
     @links      = []
-  end
-
-  # フィード全体から「実行時間からintervalの間のフィード」を抽出します。
-  # @titles, @links, @publisheds にフィルターから抽出されたデータをセットします。
-  def filter
-    return self if @all_publisheds.empty?
-
-    @all_publisheds.each_with_index do|published, index|
-      published = ParseDate::parsedate(published)[0..-3].join(',').split(/,/)
-
-      if Time.now < Time.local(published[0].to_i, published[1].to_i, published[2].to_i, published[3].to_i, published[4].to_i, published[5].to_i) + gmt_mode_japan + interval
-        @publisheds << published.join(',')
-        @titles << Kconv.toutf8(@all_titles[index])
-        @links << @all_links[index]
-      end
-    end
   end
 
   def header
@@ -107,11 +93,6 @@ class Feed
   end
 
   private
-  # GMTののフィード時間を日本と合わせるために利用します
-  def gmt_mode_japan
-    60 * 60 * 9
-  end
-
   # フィードをHpricotのオブジェクトにします。
   def open_feed(feed_name = '')
     Hpricot(open(base_url + feed_name))
@@ -119,11 +100,6 @@ class Feed
 
   def make_elems(feed)
    self
-  end
-
-  # 実行からどのくらい前までのフィードを取得するか
-  def interval
-    60 * 60 * 24 * 5
   end
 end
 
@@ -134,7 +110,7 @@ class ImpressionOfCompanyIntroduction < Feed
   end
 
   def feed
-    make_elems(open_feed("/xml/date_feed.xml")).filter
+    make_elems(open_feed("/xml/date_feed.xml"))
   end
 
   # Hpricotのオブジェクトから各インスタンス変数に配列としてセットします。
@@ -144,15 +120,15 @@ class ImpressionOfCompanyIntroduction < Feed
   def make_elems(feed)
     if feed.class == Hpricot::Doc
       (feed/'entry'/'published').each do |published|
-        @all_publisheds << published.inner_html
+        @publisheds << published.inner_html
       end
 
       (feed/'entry'/'title').each do |title|
-        @all_titles << HTMLEntities.new.decode(title.inner_html)
+        @titles << HTMLEntities.new.decode(title.inner_html)
       end
     
       (feed/'entry'/'link').each do |link|
-        @all_links << link.attributes['href']
+        @links << link.attributes['href']
       end   
     end
 
@@ -162,18 +138,99 @@ class ImpressionOfCompanyIntroduction < Feed
   def header
     ''
   end
+end
+
+class TweetHistory
+  def initialize
+    @tweet_histories = []
+
+    File.open(ARGV[2]) do |file|
+      while line = file.gets
+       @tweet_histories << line.chomp
+      end
+    end
+  end
+
+  # tweet_historyファイルにポスト内容を書き込む
+  def write(tweet)
+    tweet_history = File.open(ARGV[2], 'a+')
+    tweet_history.puts tweet
+    tweet_history.close
+  end
+
+  # 過去にポストしかを確認する
+  def past_in_the_tweet?(tweet)
+    @tweet_histories.each do |tweet_history|
+       return true if tweet_history == tweet
+    end
+
+    false
+  end
+
+  def maintenance
+    tweet_histories = []
+
+    File.open(ARGV[2]) do |file|
+      while line = file.gets
+       tweet_histories << line.chomp
+      end
+    end
+    
+    if tweet_histories.size > stay_history_count
+      # 保持する履歴のみを配列に取得
+      stay_tweet_histories = []
+      stay_number = stay_history_count
+
+      tweet_histories.reverse!.each_with_index do |history, index|
+        if index <= stay_history_count
+          stay_number = stay_number - 1
+          stay_tweet_histories << history
+        end
+      end
+
+      # File Reset
+      tweet_history = File.open(ARGV[2], 'w')
+      tweet_history.print ''
+      tweet_history.close
+      
+      # 最新の２０行のみ保存
+      tweet_history = File.open(ARGV[2], 'a+')
+
+      stay_tweet_histories.reverse!.each do |history|
+        puts history
+        tweet_history.puts history
+      end
+
+      tweet_history.close
+    end
+  end
 
   private
-  def gmt_mode_japan
-    0 
+
+  def stay_history_count
+    30
   end
 end
 
-twitter_base     = TwitterBase.new
+
+twitter_base  = TwitterBase.new
+tweet_history = TweetHistory.new
 
 # ImpressionOfCompanyIntroduction Feed Post
 impression_of_company_introduction = ImpressionOfCompanyIntroduction.new
 impression_of_company_introduction.feed
+
 impression_of_company_introduction.titles.each_with_index do |title, index|
-  twitter_base.post(impression_of_company_introduction.header +  impression_of_company_introduction.titles[index] + " - " + impression_of_company_introduction.links[index])
+  tweet = impression_of_company_introduction.header +  impression_of_company_introduction.titles[index] + " - " + impression_of_company_introduction.links[index]
+
+  unless tweet_history.past_in_the_tweet?(tweet)
+    twitter_base.post(tweet)
+
+    if twitter_base.response_success?
+      tweet_history.write(tweet)
+    end
+  end
 end
+# tweet_historyファイルの肥大化防止
+tweet_history = TweetHistory.new
+tweet_history.maintenance

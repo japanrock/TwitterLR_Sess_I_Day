@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # coding: utf-8
 
-# LOAD_PATH for htmlentities¥é¥¤¥Ö¥é¥ê
+# LOAD_PATH for htmlentitiesãƒ©ã‚¤ãƒ–ãƒ©ãƒª
 # htmlentities see: http://d.hatena.ne.jp/japanrock_pg/20100316/1268732145
 $LOAD_PATH.unshift(ARGV[1])
 
@@ -17,15 +17,15 @@ require 'htmlentities'
 
 
 ### TODO:
-### ¡¦TwitterBase¥¯¥é¥¹¤ò³°¤Ë½Ğ¤¹
+### ãƒ»TwitterBaseã‚¯ãƒ©ã‚¹ã‚’å¤–ã«å‡ºã™
 
 # Usage:
 # ruby /path/to/twitter_bot.rb /path/to/sercret_keys.yml /path/to/htmlentities-4.2.0/lib /path/to/tweet_history
 
-# Twitter¤ÎAPI¤È¤Î¤ä¤ê¤È¤ê¤ò¹Ô¤¦¥¯¥é¥¹
+# Twitterã®APIã¨ã®ã‚„ã‚Šã¨ã‚Šã‚’è¡Œã†ã‚¯ãƒ©ã‚¹
 class TwitterBase
   def initialize
-    # config.ymlÆâ¤Îsercret_keys.yml¤òload¤·¤Ş¤¹¡£
+    # config.ymlå†…ã®sercret_keys.ymlã‚’loadã—ã¾ã™ã€‚
     @secret_keys = YAML.load_file(ARGV[0] || 'sercret_keys.yml')
   end
   
@@ -76,7 +76,7 @@ class TwitterBase
   end
 end
 
-# ¥Õ¥£¡¼¥É¤ò°·¤¦´ğËÜ¥¯¥é¥¹
+# ãƒ•ã‚£ãƒ¼ãƒ‰ã‚’æ‰±ã†åŸºæœ¬ã‚¯ãƒ©ã‚¹
 class Feed
   attr_reader :publisheds
   attr_reader :titles
@@ -93,7 +93,7 @@ class Feed
   end
 
   private
-  # ¥Õ¥£¡¼¥É¤òHpricot¤Î¥ª¥Ö¥¸¥§¥¯¥È¤Ë¤·¤Ş¤¹¡£
+  # ãƒ•ã‚£ãƒ¼ãƒ‰ã‚’Hpricotã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã«ã—ã¾ã™ã€‚
   def open_feed(feed_name = '')
     Hpricot(open(base_url + feed_name))
   end
@@ -103,7 +103,7 @@ class Feed
   end
 end
 
-# ¥é¥¤¥Ö¥ì¥Ü¥ê¥å¡¼¥·¥ç¥ó¤Î²ñ¼ÒÀâÌÀ²ñ¤Î´¶ÁÛ¤Î¥Õ¥£¡¼¥É¤ò°·¤¦¥¯¥é¥¹
+# ãƒ©ã‚¤ãƒ–ãƒ¬ãƒœãƒªãƒ¥ãƒ¼ã‚·ãƒ§ãƒ³ã®ä¼šç¤¾èª¬æ˜ä¼šã®æ„Ÿæƒ³ã®ãƒ•ã‚£ãƒ¼ãƒ‰ã‚’æ‰±ã†ã‚¯ãƒ©ã‚¹
 class ImpressionOfCompanyIntroduction < Feed
   def base_url
     "http://rec.live-revolution.co.jp"
@@ -113,10 +113,10 @@ class ImpressionOfCompanyIntroduction < Feed
     make_elems(open_feed("/xml/date_feed.xml"))
   end
 
-  # Hpricot¤Î¥ª¥Ö¥¸¥§¥¯¥È¤«¤é³Æ¥¤¥ó¥¹¥¿¥ó¥¹ÊÑ¿ô¤ËÇÛÎó¤È¤·¤Æ¥»¥Ã¥È¤·¤Ş¤¹¡£
-  # @all_publishdes¤Ë¤Ï»ş´Ö
-  # @all_titles¤Ë¤Ï¥¿¥¤¥È¥ë
-  # @all_links¤Ë¤Ï¥ê¥ó¥¯URL
+  # Hpricotã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‹ã‚‰å„ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹å¤‰æ•°ã«é…åˆ—ã¨ã—ã¦ã‚»ãƒƒãƒˆã—ã¾ã™ã€‚
+  # @all_publishdesã«ã¯æ™‚é–“
+  # @all_titlesã«ã¯ã‚¿ã‚¤ãƒˆãƒ«
+  # @all_linksã«ã¯ãƒªãƒ³ã‚¯URL
   def make_elems(feed)
     if feed.class == Hpricot::Doc
       (feed/'entry'/'published').each do |published|
@@ -151,14 +151,14 @@ class TweetHistory
     end
   end
 
-  # tweet_history¥Õ¥¡¥¤¥ë¤Ë¥İ¥¹¥ÈÆâÍÆ¤ò½ñ¤­¹ş¤à
+  # tweet_historyãƒ•ã‚¡ã‚¤ãƒ«ã«ãƒã‚¹ãƒˆå†…å®¹ã‚’æ›¸ãè¾¼ã‚€
   def write(tweet)
     tweet_history = File.open(ARGV[2], 'a+')
     tweet_history.puts tweet
     tweet_history.close
   end
 
-  # ²áµî¤Ë¥İ¥¹¥È¤·¤«¤ò³ÎÇ§¤¹¤ë
+  # éå»ã«ãƒã‚¹ãƒˆã—ã‹ã‚’ç¢ºèªã™ã‚‹
   def past_in_the_tweet?(tweet)
     @tweet_histories.each do |tweet_history|
        return true if tweet_history == tweet
@@ -177,7 +177,7 @@ class TweetHistory
     end
     
     if tweet_histories.size > stay_history_count
-      # Êİ»ı¤¹¤ëÍúÎò¤Î¤ß¤òÇÛÎó¤Ë¼èÆÀ
+      # ä¿æŒã™ã‚‹å±¥æ­´ã®ã¿ã‚’é…åˆ—ã«å–å¾—
       stay_tweet_histories = []
       stay_number = stay_history_count
 
@@ -193,7 +193,7 @@ class TweetHistory
       tweet_history.print ''
       tweet_history.close
       
-      # ºÇ¿·¤Î£²£°¹Ô¤Î¤ßÊİÂ¸
+      # æœ€æ–°ã®ï¼’ï¼è¡Œã®ã¿ä¿å­˜
       tweet_history = File.open(ARGV[2], 'a+')
 
       stay_tweet_histories.reverse!.each do |history|
@@ -231,6 +231,6 @@ impression_of_company_introduction.titles.each_with_index do |title, index|
     end
   end
 end
-# tweet_history¥Õ¥¡¥¤¥ë¤ÎÈîÂç²½ËÉ»ß
+# tweet_historyãƒ•ã‚¡ã‚¤ãƒ«ã®è‚¥å¤§åŒ–é˜²æ­¢
 tweet_history = TweetHistory.new
 tweet_history.maintenance

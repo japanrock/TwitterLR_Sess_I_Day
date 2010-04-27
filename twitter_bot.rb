@@ -95,7 +95,7 @@ class TweetHistory
   def initialize
     @tweet_histories = []
 
-    File.open(ARGV[2]) do |file|
+    File.open(File.dirname(__FILE__) + '/tweet_history') do |file|
       while line = file.gets
        @tweet_histories << line.chomp
       end
@@ -104,7 +104,7 @@ class TweetHistory
 
   # tweet_historyファイルにポスト内容を書き込む
   def write(tweet)
-    tweet_history = File.open(ARGV[2], 'a+')
+    tweet_history = File.open(File.dirname(__FILE__) + '/tweet_history', 'a+')
     tweet_history.puts tweet
     tweet_history.close
   end
@@ -121,7 +121,7 @@ class TweetHistory
   def maintenance
     tweet_histories = []
 
-    File.open(ARGV[2]) do |file|
+    File.open(File.dirname(__FILE__) + '/tweet_history') do |file|
       while line = file.gets
        tweet_histories << line.chomp
       end
@@ -140,12 +140,12 @@ class TweetHistory
       end
 
       # File Reset
-      tweet_history = File.open(ARGV[2], 'w')
+      tweet_history = File.open(File.dirname(__FILE__) + '/tweet_history', 'w')
       tweet_history.print ''
       tweet_history.close
       
       # 最新の２０行のみ保存
-      tweet_history = File.open(ARGV[2], 'a+')
+      tweet_history = File.open(File.dirname(__FILE__) + '/tweet_history', 'a+')
 
       stay_tweet_histories.reverse!.each do |history|
         puts history

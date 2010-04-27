@@ -1,6 +1,10 @@
 #!/usr/bin/env ruby
 # coding: utf-8
 
+# LOAD_PATH for htmlentitiesライブラリ
+# htmlentities see: http://d.hatena.ne.jp/japanrock_pg/20100316/1268732145
+$LOAD_PATH.unshift(File.dirname(__FILE__) + '/htmlentities-4.2.0/lib/')
+
 require 'rubygems'
 require 'oauth'
 require 'json'
@@ -9,8 +13,8 @@ require 'open-uri'
 require 'yaml'
 require 'parsedate'
 require "kconv"
+require 'htmlentities'
 require File.dirname(__FILE__) + '/twitter_oauth'
-require File.dirname(__FILE__) + '/htmlentities-4.2.0/lib/htmlentities'
 
 # Usage:
 #  1. このファイルやディレクトリを同じディレクトリに配置します。

@@ -15,15 +15,20 @@ require 'parsedate'
 require "kconv"
 require 'htmlentities'
 require File.dirname(__FILE__) + '/twitter_oauth'
+require File.dirname(__FILE__) + '/shorten_url'
 
 # Usage:
 #  1. このファイルやディレクトリを同じディレクトリに配置します。
 #   * twitter_oauth.rb
-#   * http://github.com/japanrock/TwitterTools/blob/master/twitter_oauth.rb
+#    * http://github.com/japanrock/TwitterTools/blob/master/twitter_oauth.rb
 #   * sercret_key.yml
-#   * http://github.com/japanrock/TwitterTools/blob/master/secret_keys.yml.example
+#    * http://github.com/japanrock/TwitterTools/blob/master/secret_keys.yml.example
 #   * htmlentities-4.2.0/ ディレクトリ
-#   * http://github.com/japanrock/TwitterLR_ImpressionOfCompanyIntroduction/tree/master/htmlentities-4.2.0/
+#    * http://github.com/japanrock/TwitterLR_Sess_I_Day/tree/master/htmlentities-4.2.0/
+#   * shorten_url.rb
+#    * http://github.com/japanrock/TwitterTools/blob/master/shorten_url.rb
+#   * bit_ly_api_key.yml
+#    * http://github.com/japanrock/TwitterTools/blob/master/bit_ly_api_key.yml
 #  2. このファイルを実行します。
 #   ruby twitter_bot.rb
 
@@ -55,7 +60,7 @@ class Feed
 end
 
 # ライブレボリューションの会社説明会の感想のフィードを扱うクラス
-class ImpressionOfCompanyIntroduction < Feed
+class LrSessIDay < Feed
   def base_url
     "http://rec.live-revolution.co.jp"
   end
@@ -166,22 +171,30 @@ end
 
 twitter_oauth = TwitterOauth.new
 tweet_history = TweetHistory.new
+shorten_url   = ShortenURL.new
 
-# ImpressionOfCompanyIntroduction Feed Post
-impression_of_company_introduction = ImpressionOfCompanyIntroduction.new
-impression_of_company_introduction.feed
+# LrSessIDay Feed Post
+lr_sess_i_day = LrSessIDay.new
+lr_sess_i_day.feed
 
-impression_of_company_introduction.titles.each_with_index do |title, index|
-  tweet = impression_of_company_introduction.header +  impression_of_company_introduction.titles[index] + " - " + impression_of_company_introduction.links[index]
+lr_sess_i_day.titles.each_with_index do |title, index|
+  tweet = lr_sess_i_day.header +  lr_sess_i_day.titles[index] + " - " + lr_sess_i_day.links[index]
 
   unless tweet_history.past_in_the_tweet?(tweet)
-    twitter_oauth.post(tweet)
+    # URL短縮
+    shorten_url.get_short_url(lr_sess_i_day.links[index])
+    short_url = shorten_url.short_url
+
+    tweet_short_url_version = lr_sess_i_day.header +  lr_sess_i_day.titles[index] + " - " + short_url
+
+    twitter_oauth.post(tweet_short_url_version)
 
     if twitter_oauth.response_success?
       tweet_history.write(tweet)
     end
   end
 end
+
 # tweet_historyファイルの肥大化防止
 tweet_history = TweetHistory.new
 tweet_history.maintenance

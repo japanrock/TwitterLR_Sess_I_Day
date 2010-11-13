@@ -171,7 +171,6 @@ class TweetHistory
       tweet_history = File.open(File.dirname(__FILE__) + '/tweet_history', 'a+')
 
       stay_tweet_histories.reverse!.each do |history|
-        puts history
         tweet_history.puts history
       end
 
